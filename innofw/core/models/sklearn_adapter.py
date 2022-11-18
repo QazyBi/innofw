@@ -44,11 +44,12 @@ class SklearnAdapter(BaseModelAdapter):
             inspect.getmodule(model).__package__.split(".")[0] == "sklearn"
         )  # todo: should it be written using Frameworks.sklearn.value?
 
-    def __init__(self, model, log_dir, callbacks=None, *args, **kwargs):
+    def __init__(self, model, log_dir, metrics=None, *args, **kwargs):
         super().__init__(model, log_dir, PickleCheckpointHandler())
         self.metrics = []
-        if callbacks:
-            self.metrics = self.prepare_metrics(callbacks)
+        print(metrics)
+        if metrics:
+            self.metrics = self.prepare_metrics(metrics)
 
     def prepare_metrics(self, metrics):
         callable_metrics = []
@@ -86,6 +87,7 @@ class SklearnAdapter(BaseModelAdapter):
         # todo: calculate metrics and log
         results = {}
         y_pred = self.forward(x)
+        print(self.metrics)
         for metric in self.metrics:
             if isinstance(self.model, sklearn.base.ClusterMixin):
                 score = metric["func"](x, np.array(y_pred), **metric["args"])

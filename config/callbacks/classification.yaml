@@ -1,21 +1,22 @@
-requirements:
-  task:
-    - table-classification
-  framework:
-    - xgboost
-    - sklearn
+task:
+  - table-classification
+  - image-classification
 
-objects:
+implementations:
   xgboost:
     accuracy:
       _target_: innofw.core.metrics.custom_metrics.metrics.Accuracy
     f_one:
       _target_: sklearn.metrics.f1_score
       average: macro
-
   sklearn:
     accuracy:
       _target_: sklearn.metrics.accuracy_score
     f_one:
       _target_: sklearn.metrics.f1_score
       average: macro
+  torch:
+    accuracy:
+      _target_: torchmetrics.Accuracy
+    f_one:
+      _target_: torchmetrics.F1Score

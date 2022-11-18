@@ -2,7 +2,7 @@
 defaults:
   - override /models: kmeans
   - override /datasets: clustering_credit_cards
-  - override /callbacks: clustering
+  - override /metrics: clustering
 
 
 project: "credit_cards"

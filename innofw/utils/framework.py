@@ -164,6 +164,35 @@ def get_callbacks(cfg, task, framework, *args, **kwargs):
     return callbacks
 
 
+
+def get_metrics(cfg, task, framework, *args, **kwargs):
+    # todo: make it compliant for other frameworks other than pytorch lightning
+    # =*=*=*=*= Callbacks =*=*=*=*=
+    metrics = []
+    if "metrics" in cfg and cfg.metrics is not None:
+        if "task" not in cfg["metrics"]:
+            return None
+        if is_suitable_for_task(cfg.metrics, task) and is_suitable_for_framework(
+                cfg.metrics, framework
+        ):
+            for _, cb_conf in cfg.metrics.implementations[framework.value].items():
+                if "_target_" in cb_conf:
+                    if inspect.isclass(cb_conf["_target_"]):
+                        try:
+                            metrics.append(
+                                hydra.utils.instantiate(
+                                    cb_conf, *args, **kwargs, _recursive_=False
+                                )
+                            )
+                        except:
+                            metrics.append(
+                                hydra.utils.instantiate(cb_conf, _recursive_=False)
+                            )
+                    else:
+                        metrics.append(cb_conf)
+    return metrics
+
+
 from innofw.schema.model import ModelConfig
 from innofw.schema.dataset import DatasetConfig
 from innofw.schema.experiment import ExperimentConfig

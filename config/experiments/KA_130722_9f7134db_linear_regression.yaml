@@ -2,7 +2,7 @@
 defaults:
   - override /models: linear_regression
   - override /datasets: regression_house_prices
-  - override /callbacks: regression
+  - override /metrics: regression
 
 
 project: "house_prices"

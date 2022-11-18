@@ -5,6 +5,7 @@ defaults:
   - override /augmentations: classification.yaml
   - override /losses: log_loss.yaml
   - override /optimizers: adam
+  - override /callbacks: classification
 
 project: "mnist_classification"
 task: "image-classification"
