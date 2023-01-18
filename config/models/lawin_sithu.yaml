@@ -1,0 +1,3 @@
+_target_: segmentation.models.architectures.semseg.lawin.Lawin
+backbone: MiT-B0
+num_classes: 1
