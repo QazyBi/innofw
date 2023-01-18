@@ -14,6 +14,7 @@ from innofw.core.models.torch.lightning_modules import (
     ClassificationLightningModule,
     OneShotLearningLightningModule,
     SemanticSegmentationLightningModule,
+
 )
 from innofw.core.models.torch.lightning_modules.detection import (
     DetectionLightningModule,
