@@ -1,1 +1,1 @@
-_target_: segmentation.losses.dice.Dice
+_target_: innofw.core.losses.sithu_dice.Dice
