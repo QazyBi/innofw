@@ -1,6 +1,6 @@
 import torch
 from torch import nn, Tensor
-from semseg.models.layers import DropPath
+from ..layers import DropPath
 
 
 class LayerNorm(nn.Module):

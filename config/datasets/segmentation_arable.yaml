@@ -6,6 +6,7 @@ description: dataset for running training in hdf5 format
 markup_info: Информация о разметке
 date_time: 03.09.2030
 
+_target_: innofw.core.datamodules.lightning_datamodules.segmentation_hdf5_dm.HDF5LightningDataModule
 
 train:
   source: https://api.blackhole.ai.innopolis.university/public-datasets/testing/arable/train.zip

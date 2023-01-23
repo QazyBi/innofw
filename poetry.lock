@@ -489,6 +489,14 @@ python-versions = ">=3.5.0"
 torch = "*"
 
 [[package]]
+name = "einops"
+version = "0.6.0"
+description = "A new flavour of deep learning operations"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "entrypoints"
 version = "0.4"
 description = "Discover and load entry points from installed packages."
@@ -2838,7 +2846,7 @@ clearml = []
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.10"
-content-hash = "fb9b65ca2706ec21ce0f1895a97ea8e14be21b73f8be2f76d60136bb302300fd"
+content-hash = "c1dfb600c59dc44a3bfd3a28f671c2cb68b51a120465eb9b06b93e8930cf9c92"
 
 [metadata.files]
 absl-py = [
@@ -3236,6 +3244,10 @@ distlib = [
 ]
 efficientnet-pytorch = [
     {file = "efficientnet_pytorch-0.6.3.tar.gz", hash = "sha256:6667459336893e9bf6367de3788ba449fed97f65da3b6782bf2204b6273a319f"},
+]
+einops = [
+    {file = "einops-0.6.0-py3-none-any.whl", hash = "sha256:c7b187a5dc725f079860ec2d330c1820448948622d826273345a8dd8d5f695bd"},
+    {file = "einops-0.6.0.tar.gz", hash = "sha256:6f6c78739316a2e3ccbce8052310497e69da092935e4173f2e76ec4e3a336a35"},
 ]
 entrypoints = [
     {file = "entrypoints-0.4-py3-none-any.whl", hash = "sha256:f174b5ff827504fd3cd97cc3f8649f3693f51538c7e4bdf3ef002c8429d42f9f"},

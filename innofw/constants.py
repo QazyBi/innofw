@@ -68,6 +68,13 @@ class CLI_FLAGS(Enum):
     ENABLE = "WITH_CLI"
 
 
+class SegDataKeys(Enum):
+    image: str = 'image'
+    label: str = 'label'
+
+class SegOutKeys(Enum):
+    predictions: str = 'preds'
+
 # ==== instances ====
 """
 s3 user with following rights to two buckets: data_mart and model_zoo(ref. BucketNames):

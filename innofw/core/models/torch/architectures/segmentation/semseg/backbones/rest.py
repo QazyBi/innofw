@@ -1,7 +1,7 @@
 import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
-from semseg.models.layers import DropPath
+from ..layers import DropPath
 
 
 class MLP(nn.Module):

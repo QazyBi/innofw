@@ -2,6 +2,8 @@ from typing import Optional
 
 import numpy as np
 import torch
+from innofw.constants import SegDataKeys
+import logging
 
 
 def prep_data(
@@ -16,6 +18,7 @@ def prep_data(
             image = sample["image"]
 
     image = np.moveaxis(image, 2, 0)
+    logging.debug("doing preprocessing: division by 255")
     # ============== preprocessing ==============
     image = image / 255.0
     # ===========================================
@@ -26,6 +29,6 @@ def prep_data(
         mask = torch.from_numpy(mask.copy())
         mask = torch.unsqueeze(mask, 0).float()
 
-        return {"scenes": image, "labels": mask}
+        return {SegDataKeys.image: image[:3, ...], SegDataKeys.label: mask}
 
-    return {"scenes": image}
+    return {SegDataKeys.image: image}

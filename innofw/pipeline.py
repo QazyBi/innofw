@@ -122,7 +122,7 @@ def run_pipeline(
         stages.append(Stages.test)
     if predict:
         stages.append(Stages.predict)
-
+    
     stage_to_func = {
         Stages.test: inno_model.test,
         Stages.predict: inno_model.predict,

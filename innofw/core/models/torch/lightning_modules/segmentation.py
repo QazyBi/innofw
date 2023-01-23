@@ -18,7 +18,7 @@ from torchmetrics.classification import (
 from torch.cuda.amp import GradScaler, autocast
 import torch
 from torchmetrics import MetricCollection
-import lovely_tensors as lt
+# import lovely_tensors as lt
 from torch import Tensor
 
 
@@ -26,7 +26,7 @@ from torch import Tensor
 from innofw.constants import SegDataKeys, SegOutKeys
 
 
-lt.monkey_patch()
+# lt.monkey_patch()
 
 
 class SemanticSegmentationLightningModule(pl.LightningModule):
@@ -34,8 +34,8 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
         self,
         model,
         loss,
-        metrics,
         optim_config,
+        metrics=None,
         scheduler_cfg=None,
         threshold=0.5,
         *args: Any,
@@ -47,11 +47,11 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
         else:
             self.model = model
 
-        self.loss = hydra.utils.instantiate(loss)
+        self.losses = loss  # hydra.utils.instantiate(loss)
         self.optim_config = optim_config
         self.scheduler_cfg = scheduler_cfg
         self.threshold = threshold
-        self.automatic_optimization = False
+        # self.automatic_optimization = False
         metrics = MetricCollection(
             [
                 BinaryF1Score(threshold=threshold),
@@ -68,7 +68,7 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
         self.save_hyperparameters(ignore=["metrics", "optim_config", "scheduler_cfg"])
 
     def forward(self, raster):
-        return self.model(raster)
+        return torch.max(self.model(raster), dim=1)[0]
 
     def configure_optimizers(self):
         output = {}
@@ -83,7 +83,6 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
             # instantiate the scheduler
             scheduler = hydra.utils.instantiate(self.scheduler_cfg, optimizer=optimizer)
             output["lr_scheduler"] = scheduler
-
         return output
 
     # def backward(
@@ -102,14 +101,14 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
     #     torch.cuda.synchronize()
     #     return res
 
-    def compute_loss(self, predictions, labels):
-        loss = self.loss(predictions, labels)
+    # def compute_loss(self, predictions, labels):
+    #     loss = self.loss(predictions, labels)
 
-        # with autocast(enabled=train_cfg["AMP"]):
-        #     logits = model(img)
-        #     loss = loss_fn(logits, lbl)
-        return loss
-        # return self.scaler.scale(loss)  # todo: refactor !!!!
+    #     # with autocast(enabled=train_cfg["AMP"]):
+    #     #     logits = model(img)
+    #     #     loss = loss_fn(logits, lbl)
+    #     return loss
+    #     # return self.scaler.scale(loss)  # todo: refactor !!!!
 
     def compute_metrics(self, stage, predictions, labels):
         if stage == "train":
@@ -120,10 +119,25 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
         elif stage == "test":
             return self.test_metrics(predictions.view(-1), labels.view(-1))
 
-    def log_losses(self, stage, losses_res):
-        self.log(
-            f"{stage}_loss", losses_res, sync_dist=True
-        )  # todo: check when to use this sync_dist=True
+    def log_losses(
+            self, name: str, logits: torch.Tensor, masks: torch.Tensor
+    ) -> torch.FloatTensor:
+        """Function to compute and log losses"""
+        total_loss = 0
+        for loss_name, weight, loss in self.losses:
+            # for loss_name in loss_dict:
+            ls_mask = loss(logits, masks)
+            total_loss += weight * ls_mask
+
+            self.log(
+                f"loss/{name}/{weight} * {loss_name}",
+                ls_mask,
+                on_step=False,
+                on_epoch=True,
+            )
+
+        self.log(f"loss/{name}", total_loss, on_step=False, on_epoch=True)
+        return total_loss
 
     def log_metrics(self, stage, metrics_res):
         for key, value in metrics_res.items():
@@ -135,8 +149,8 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
         # todo: check that model is in mode no autograd
         raster, label = batch[SegDataKeys.image], batch[SegDataKeys.label]
 
-        with autocast(enabled=True):
-            predictions = self.forward(raster)
+        # with autocast(enabled=True):
+        predictions = self.forward(raster)
         # if (
         #     predictions.max() > 1 or predictions.min() < 0
         # ):  # todo: should be configurable via cfg file
@@ -145,21 +159,22 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
         output[SegOutKeys.predictions] = predictions
 
         if stage in ["train", "val"]:
-            with autocast(enabled=True):
-                loss = self.compute_loss(predictions, label)
-            self.log_losses(stage, loss)
+            # with autocast(enabled=True):
+            loss = self.log_losses(stage, predictions.squeeze(), label.squeeze())
+                # loss = self.compute_loss(predictions, label)
+            # self.log_losses(stage, loss)
             output["loss"] = loss
 
-            self.scaler.scale(loss).backward()
-            self.scaler.step(self.optimizers)
-            self.scaler.update()
-            self.lr_schedulers().step()
-            torch.cuda.synchronize()
+            # self.scaler.scale(loss).backward()
+            # self.scaler.step(self.optimizers)
+            # self.scaler.update()
+            # self.lr_schedulers().step()
+            # torch.cuda.synchronize()
 
-        if stage != "predict":
-            metrics = self.compute_metrics(stage, predictions, label)  # todo: uncomment
-            self.log_metrics(stage, metrics)
-        torch.cuda.empty_cache()
+        # if stage != "predict":
+        #     metrics = self.compute_metrics(stage, predictions, label)  # todo: uncomment
+        #     self.log_metrics(stage, metrics)
+        # torch.cuda.empty_cache()
 
         return output
 
