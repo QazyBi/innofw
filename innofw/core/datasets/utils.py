@@ -29,6 +29,6 @@ def prep_data(
         mask = torch.from_numpy(mask.copy())
         mask = torch.unsqueeze(mask, 0).float()
 
-        return {SegDataKeys.image: image[:3, ...], SegDataKeys.label: mask}
+        return {SegDataKeys.image: image, SegDataKeys.label: mask}
 
     return {SegDataKeys.image: image}

@@ -11,12 +11,14 @@ class Lawin(BaseModel):
     Will update the code and weights if the original author releases the full code.
     """
 
-    def __init__(self, backbone: str = "MiT-B0", num_classes: int = 19) -> None:
+    def __init__(self, backbone: str = "MiT-B0", num_classes: int = 19, in_channels: int = 3) -> None:
         super().__init__(backbone, num_classes)
         self.decode_head = LawinHead(
             self.backbone.channels, 256 if "B0" in backbone else 512, num_classes
         )
         self.apply(self._init_weights)
+        if in_channels != 3 and 'MiT-B' in backbone and backbone != 'MiT-B0':
+            self.backbone.patch_embed1.proj = torch.nn.Conv2d(in_channels, 64, kernel_size=(7, 7), stride=(4, 4), padding=(3, 3))
 
     def forward(self, x: Tensor) -> Tensor:
         y = self.backbone(x)

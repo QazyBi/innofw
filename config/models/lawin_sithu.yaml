@@ -1,5 +1,6 @@
 _target_: innofw.core.models.torch.architectures.segmentation.semseg.lawin.Lawin
-backbone: MiT-B0
+backbone: MiT-B1
 num_classes: 2
 name: lawin
 description: something
+in_channels: 4
