@@ -4,8 +4,9 @@ import pathlib
 
 import cv2
 import torch
+import rasterio as rio
 
-from innofw.constants import Frameworks, Stages
+from innofw.constants import Frameworks, Stages, SegOutKeys
 
 from innofw.core.datamodules.lightning_datamodules.base import (
     BaseLightningDataModule,
@@ -46,6 +47,7 @@ class HDF5LightningDataModule(BaseLightningDataModule):
             batch_size: int = 32,
             num_workers: int = 1,
             random_seed: int = 42,
+            threshold: float = 0.3,
             stage=None,
             *args,
             **kwargs,
@@ -65,6 +67,7 @@ class HDF5LightningDataModule(BaseLightningDataModule):
         self.channels_num = channels_num
         self.val_size = val_size
         self.random_seed = random_seed
+        self.threshold = threshold
 
     def find_hdf5(self, path):
         paths = []
@@ -98,11 +101,29 @@ class HDF5LightningDataModule(BaseLightningDataModule):
     def save_preds(self, preds, stage: Stages, dst_path: pathlib.Path):
         out_file_path = dst_path / "results"
         os.mkdir(out_file_path)
+        i = 0
         for preds_batch in preds:
-            for i , pred in enumerate(preds_batch):
+            for pred, image, mask in zip(preds_batch[SegOutKeys.predictions], preds_batch[SegOutKeys.image], preds_batch[SegOutKeys.label]):
                 pred = pred.numpy()
-                pred[pred < 0.3] = 0
-                pred[pred > 0] = 255
-                filename = out_file_path / f"out_{i}.png"
-                cv2.imwrite(filename, pred[0])
+                image = image.numpy()
+                mask = mask.numpy() * 255
+
+                pred[pred < self.threshold] = 0  # todo: refactor
+                pred[pred > 0] = 255  # make it suitable for multiclass/multilabel case
+                format = '.tif'  # todo: refactor!!!!!
+                if format == '.tif':
+                    filename = out_file_path / f"out_{i}.tif"
+
+                    with rio.open(filename, 'w', height=pred.shape[0], width=pred.shape[1], count=1, dtype='float32') as f:
+                        f.write(pred, 1)
+
+                    with rio.open(out_file_path / f"img_{i}.tif", 'w', height=image.shape[1], width=image.shape[2], count=image.shape[0], dtype='float32') as f:  # todo: refactor: use metadata
+                        f.write(image)
+
+                    with rio.open(out_file_path / f"mask_{i}.tif", 'w', height=mask.shape[1], width=mask.shape[2], count=1, dtype='float32') as f:  # todo: refactor
+                        f.write(mask.squeeze(), 1)  # todo: refactor: varying channels
+                else:
+                    pass
+                    # cv2.imwrite(filename, pred)  # [0]
+                i += 1
         logging.info(f"Saved result to: {out_file_path}")

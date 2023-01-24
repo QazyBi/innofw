@@ -144,17 +144,20 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
             self.log(key, value, sync_dist=True)
 
     def stage_step(self, stage, batch, do_logging=False, *args, **kwargs):
-        output = dict()
-        self.optimizers().zero_grad()  # set_to_none=True
-        # todo: check that model is in mode no autograd
         raster, label = batch[SegDataKeys.image], batch[SegDataKeys.label]
+        output = {
+            SegOutKeys.image: raster,
+            SegOutKeys.label: label,
+        }
+        # self.optimizers().zero_grad()  # set_to_none=True
+        # todo: check that model is in mode no autograd
 
         # with autocast(enabled=True):
         predictions = self.forward(raster)
-        # if (
-        #     predictions.max() > 1 or predictions.min() < 0
-        # ):  # todo: should be configurable via cfg file
-        #     predictions = torch.sigmoid(predictions)
+        if (
+            predictions.max() > 1 or predictions.min() < 0
+        ):  # todo: should be configurable via cfg file
+            predictions = torch.sigmoid(predictions)
 
         output[SegOutKeys.predictions] = predictions
 
@@ -186,6 +189,9 @@ class SemanticSegmentationLightningModule(pl.LightningModule):
 
     def test_step(self, batch, *args, **kwargs) -> Optional[STEP_OUTPUT]:
         return self.stage_step("test", batch)
+
+    def predict_step(self, batch, *args, **kwargs) -> Optional[STEP_OUTPUT]:
+        return self.stage_step("predict", batch)
 
     # def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: Optional[int] = None) -> Any:
     #     tile, coords = batch[SegDataKeys.image], batch[SegDataKeys.coords]

@@ -73,6 +73,8 @@ class SegDataKeys(Enum):
     label: str = 'label'
 
 class SegOutKeys(Enum):
+    image: str = 'image'
+    label: str = 'mask'
     predictions: str = 'preds'
 
 # ==== instances ====
